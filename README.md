@@ -4,10 +4,10 @@
 Changelogs:
  -280322 ALPHA:
     -New texture for player
-    -New  backgroung
+    -New  background
     -Blocks
-    -Ball is bouncing
-    -New Versions count
+    -Ball is bouncing now
+    -New Version count
 
 -0.0.1 ALPHA:
     -Added player
