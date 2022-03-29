@@ -15,4 +15,4 @@ Changelogs:
 
 -----------------------
 
-This game is open-source! If you want to copy something, you can!
+This game is open-source! If you want to copy something, go ahead!
