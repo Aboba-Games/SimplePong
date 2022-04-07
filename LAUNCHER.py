@@ -1,3 +1,4 @@
+from turtle import width
 import pygame
 import random
 
@@ -5,6 +6,14 @@ import random
 FPS = 60
 WIDTH = 900
 HEIGHT = 600
+
+def printing(window, text, font, size, color, x, y):
+    fontName = pygame.font.match_font(font)
+    fontSize = pygame.font.Font(fontName, size)
+    textSurface = fontSize.render(text, True, color)
+    text_rect = textSurface.get_rect()
+    text_rect.center = (x, y)
+    window.blit(textSurface, text_rect)
 
 #colors
 WHITE = (255, 255, 255)
@@ -58,8 +67,8 @@ class Platform(pygame.sprite.Sprite):
 class Circle(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((10,10))
-        self.image.fill(VIOLET)
+        self.image = pygame.Surface((20,20))
+        self.image = pygame.transform.scale(circleImg,(20,20))
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH//2, HEIGHT//2)
         self.speedx = random.randint(-3,3)
@@ -86,7 +95,7 @@ class Block(pygame.sprite.Sprite):
     def __init__(self,x,y):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((43,43))
-        self.image.fill(DARKGREEN)
+        self.image = pygame.transform.scale(blockImg,(43,43))
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -99,9 +108,15 @@ clock = pygame.time.Clock()
 
 #textures and design
 platImg = pygame.image.load('player.jpg').convert()
+blockImg = pygame.image.load('brick.jpg').convert()
+circleImg = pygame.image.load('circle.jpg').convert()
 mainbg = pygame.image.load('mainBg.jpg').convert()
 mainbg = pygame.transform.scale(mainbg,(WIDTH, HEIGHT))
 mainbg_rect = mainbg.get_rect()
+bglv = pygame.image.load('bglv.jpg').convert()
+bglv = pygame.transform.scale(bglv,(WIDTH, HEIGHT))
+bglv_rect = bglv.get_rect()
+
 
 #objects
 player = Platform()
@@ -114,9 +129,16 @@ sprites.add(player)
 sprites.add(circle)
 
 levels = [
-    ['# # # # # # # # # # ',
-     '## # # ### # # #    ']
-]
+    ['####################',
+     ' # # # # # # # # # #'],
+
+    ['####################',
+     '# #### ### ### ### #'],
+
+    ['# # # # ## # # # # #',
+     '####################'],
+        ]
+
 
 level = 0
 for i in range(20):
@@ -126,23 +148,85 @@ for i in range(20):
             sprites.add(block)
             blocks.add(block)
 
+playerScore = 0
+state = 0 #0- game is going on, 1 - level has ended. 2 - game has ended
+
 run = True
 while run:
     clock.tick(FPS)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            run = False
+                run = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_q:
+                if state != 0:
+                    run = False
+            if event.key == pygame.K_c:
+                if state != 0:
+                    state = 0
+            if event.key == pygame.K_z:
+                printing(window, 'Cheat Activated', 'Times New Roman', 30, RED, 850, HEIGHT//2-80)
+                state == 1
 
-    hits = pygame.sprite.spritecollide(player, circles, False)
-    if hits:
+            if event.key == pygame.K_r:
+                if state != 0:
+                    state = 0
+                    level = 0
+                    playerScore = 0
+                    for i in range(20):
+                        for j in range(len(levels[level])):
+                            if levels[level][j][i] == '#':
+                                block = Block(i*45, j*45)
+                                sprites.add(block)
+                                blocks.add(block)
+                    circle.rect.center = (WIDTH//2, HEIGHT//2)
+
+    hitscircle = pygame.sprite.spritecollide(player, circles, False)
+    if hitscircle:
         circle.speedy = -circle.speedy
-    if circle.rect.y > HEIGHT:
-        run = False
 
-    window.blit(mainbg, mainbg_rect)
-    sprites.draw(window)
-    sprites.update()
-    pygame.display.flip()
+    hitsblocks = pygame.sprite.spritecollide(circle, blocks, True)
+    for hit in hitsblocks:
+        if hitsblocks:
+            playerScore+=1
+            circle.speedy = -circle.speedy
+    
+    if len(blocks.sprites()) == 0:
+        level+=1
+        if level == len(levels):
+            state = 2 #end
+        elif state!=2:
+            state = 1 #level passed
+            for i in range(20):
+                for j in range(len(levels[level])):
+                    if levels[level][j][i] == '#':
+                        block = Block(i*45, j*45)
+                        sprites.add(block)
+                        blocks.add(block)
+            circle.rect.center = (WIDTH//2, HEIGHT//2)
+
+    if circle.rect.y > HEIGHT:
+        state = 2
+
+    if state == 0:
+        window.blit(mainbg, mainbg_rect)
+        sprites.draw(window)
+        sprites.update()
+        printing(window, 'Score: '+str(playerScore), 'Sheriff', 30, GREEN, 60, HEIGHT-70)
+        pygame.display.flip()
+    elif state == 1:
+        window.blit(bglv, bglv_rect)
+        printing(window, "You've passed the level!", 'Arial', 30, VIOLET, WIDTH//2, HEIGHT//2-20)
+        printing(window, '|C| Continue', 'Arial', 25, BLUE, WIDTH//2, HEIGHT//2+80)
+        printing(window, '|Q| Quit', 'Arial', 25, BLUE, WIDTH//2, HEIGHT//2+120)
+        pygame.display.flip()
+    elif state == 2:
+        window.blit(bglv, bglv_rect)
+        printing(window, "The End!", 'Arial', 30, VIOLET, WIDTH//2, HEIGHT//2-20)
+        printing(window, '|R| Restart', 'Arial', 25, BLUE, WIDTH//2, HEIGHT//2+80)
+        printing(window, '|Q| Quit', 'Arial', 25, BLUE, WIDTH//2, HEIGHT//2+120)
+        printing(window, 'For more games you can visit our github: https://github.com/Aboba-Games', 'Arial', 25, MEDIUMSLATEBLUE, WIDTH//2, HEIGHT//2+160)
+        pygame.display.flip()
 
 pygame.quit()
-#280322 ALPHA
+#Beta 00
