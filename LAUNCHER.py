@@ -1,4 +1,3 @@
-from turtle import width
 import pygame
 import random
 
@@ -229,4 +228,4 @@ while run:
         pygame.display.flip()
 
 pygame.quit()
-#Beta 00
+#Release00
